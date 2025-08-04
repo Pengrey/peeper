@@ -1,0 +1,12 @@
+[package]
+name = "peeper"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+enumerate = { path = "enumerate" }
+extract = { path = "extract" }
+dump = { path = "dump" }
+
+[features]
+debug = []
