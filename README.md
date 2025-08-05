@@ -1,6 +1,6 @@
 # peeper-rs
 
-Example of usage of the [CVE-2023-36266](https://nvd.nist.gov/vuln/detail/CVE-2023-36266)(won't fix) to extract credentials from [Keeper](https://www.keepersecurity.com/).
+Example of usage of the [CVE-2023-36266](https://nvd.nist.gov/vuln/detail/CVE-2023-36266) (won't fix) to extract credentials from [Keeper](https://www.keepersecurity.com/).
 
 # Usage
 ```powershell
