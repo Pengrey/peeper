@@ -1,8 +1,6 @@
 use cli::{get_choice, Application};
 
 fn main() -> std::io::Result<()> {
-    // The explicit type annotation has been removed. The compiler will now infer
-    // the correct type for `process_id` from the function returning it.
     let (process_id, extractors) = match get_choice() {
         Application::Msedge => {
             println!("[i] Scanning Microsoft Edge...");
