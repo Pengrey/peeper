@@ -22,19 +22,23 @@ impl Drop for ProcessHandle {
     }
 }
 
-pub fn iterate_over_mem(pid: u32, extractors: &[fn(&str)]) -> Result<(), Box<dyn std::error::Error>> {
+pub fn iterate_over_mem(pid: u32, extractors: &[fn(&str, bool)], verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
     unsafe {
         // Get a handle to the process with VM READ and QUERY permissions
         let process_handle = ProcessHandle(match OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, false, pid) {
             Ok(handle) => handle,
             Err(e) => {
-                println!("[-] Failed to open process: {}", e);
+                if verbose {
+                    println!("[-] Failed to open process: {}", e);
+                }
                 return Err(e.into());
             }
         });
 
         if process_handle.0.is_invalid() {
-            println!("[-] Invalid process handle");
+            if verbose {
+                println!("[-] Invalid process handle");
+            }
             return Ok(());
         }
 
@@ -56,7 +60,7 @@ pub fn iterate_over_mem(pid: u32, extractors: &[fn(&str)]) -> Result<(), Box<dyn
                         if bytes_read > 0 {
                             let text = String::from_utf8_lossy(&buffer[..bytes_read]);
                             for extractor_fn in extractors {
-                                extractor_fn(&text);
+                                extractor_fn(&text, verbose);
                             }
                         }
                     }

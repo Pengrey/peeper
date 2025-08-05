@@ -20,7 +20,7 @@ struct Credential {
     fields: Vec<Field>,
 }
 
-pub fn extract_credentials_desktop(text: &str) {
+pub fn extract_credentials_desktop(text: &str, verbose: bool) {
     let mut strings_list: Vec<String> = Vec::new();
 
     let re = Regex::new(r#"(\{"title":.*?,"custom":\[]\})"#).unwrap();
@@ -36,13 +36,26 @@ pub fn extract_credentials_desktop(text: &str) {
             }
 
             if !strings_list.contains(&matched_str) && matched_str.len() > 20 {
-                println!("[+] Found Credential");
                 let result: Result<Credential, _> = serde_json::from_str(&matched_str);
 
                 match result {
                     Ok(credential) => {
+                        println!("[+] Found Credential:");
+                        let mut user = None;
                         let mut password = None;
                         for field in &credential.fields {
+                            // Get user
+                            if field.field_type == "login" {
+                                if let Some(val_array) = field.value.as_array() {
+                                    if !val_array.is_empty() {
+                                        if let Some(first_val) = val_array[0].as_str() {
+                                            user = Some(first_val.to_string());
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Get password
                             if field.field_type == "password" {
                                 if let Some(val_array) = field.value.as_array() {
                                     if !val_array.is_empty() {
@@ -55,15 +68,22 @@ pub fn extract_credentials_desktop(text: &str) {
                         }
 
                         println!("\t[>] Title: {}", credential.title);
-
+                        if let Some(u) = user {
+                            println!("\t[>] User: {}", u);
+                        } else {
+                            println!("\t[>] User: not found in fields");
+                        }
                         if let Some(p) = password {
                             println!("\t[>] Password: {}", p);
                         } else {
                             println!("\t[>] Password: not found in fields");
                         }
                     }
-                    Err(e) => {
-                        println!("[!] Failed to parse JSON: {}", e);
+                    Err(_e) => {
+                        if verbose {
+                            println!("[+] Found Credential:");
+                            println!("[!] Failed to parse JSON: {}", matched_str);
+                        }
                     }
                 }
 
@@ -73,7 +93,7 @@ pub fn extract_credentials_desktop(text: &str) {
     }
 }
 
-pub fn extract_credentials_chrome(text: &str) {
+pub fn extract_credentials_chrome(text: &str, verbose: bool) {
     let mut strings_list: Vec<String> = Vec::new();
 
     let re = Regex::new(r#"(\"title\":.*?(\"custom\"|\"fields\"):\[\])"#).unwrap();
@@ -92,13 +112,26 @@ pub fn extract_credentials_chrome(text: &str) {
             matched_str = format!("{{{}}}", &matched_str);
 
             if !strings_list.contains(&matched_str) && matched_str.len() > 20 {
-                println!("[+] Found Credential:");
                 let result: Result<Credential, _> = serde_json::from_str(&matched_str);
 
                 match result {
                     Ok(credential) => {
+                        println!("[+] Found Credential:");
+                        let mut user = None;
                         let mut password = None;
                         for field in &credential.fields {
+                            // Get user
+                            if field.field_type == "login" {
+                                if let Some(val_array) = field.value.as_array() {
+                                    if !val_array.is_empty() {
+                                        if let Some(first_val) = val_array[0].as_str() {
+                                            user = Some(first_val.to_string());
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Get password
                             if field.field_type == "password" {
                                 if let Some(val_array) = field.value.as_array() {
                                     if !val_array.is_empty() {
@@ -111,7 +144,11 @@ pub fn extract_credentials_chrome(text: &str) {
                         }
 
                         println!("\t[>] Title: {}", credential.title);
-
+                        if let Some(u) = user {
+                            println!("\t[>] User: {}", u);
+                        } else {
+                            println!("\t[>] User: not found in fields");
+                        }
                         if let Some(p) = password {
                             println!("\t[>] Password: {}", p);
                         } else {
@@ -119,7 +156,10 @@ pub fn extract_credentials_chrome(text: &str) {
                         }
                     }
                     Err(_e) => {
-                        println!("[!] Failed to parse JSON: {}", matched_str);
+                        if verbose {
+                            println!("[+] Found Credential:");
+                            println!("[!] Failed to parse JSON: {}", matched_str);
+                        }
                     }
                 }
 
@@ -129,7 +169,7 @@ pub fn extract_credentials_chrome(text: &str) {
     }
 }
 
-pub fn extract_cookies(text: &str) {
+pub fn extract_cookies(text: &str, _verbose: bool) {
     let mut strings_list: Vec<String> = Vec::new();
 
     let re = Regex::new(r#"(\{"expiry":.*?,"data":.*?})"#).unwrap();
