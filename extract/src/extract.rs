@@ -43,27 +43,20 @@ pub fn extract_credentials_desktop(text: &str, verbose: bool) {
                         println!("[+] Found Credential:");
                         let mut user = None;
                         let mut password = None;
-                        for field in &credential.fields {
-                            // Get user
-                            if field.field_type == "login" {
-                                if let Some(val_array) = field.value.as_array() {
-                                    if !val_array.is_empty() {
-                                        if let Some(first_val) = val_array[0].as_str() {
-                                            user = Some(first_val.to_string());
-                                        }
-                                    }
-                                }
-                            }
 
-                            // Get password
-                            if field.field_type == "password" {
-                                if let Some(val_array) = field.value.as_array() {
-                                    if !val_array.is_empty() {
-                                        if let Some(first_val) = val_array[0].as_str() {
-                                            password = Some(first_val.to_string());
-                                        }
+                        for field in &credential.fields {
+                            match field.field_type.as_str() {
+                                "login" => {
+                                    if let Some(first_val) = field.value.as_array().and_then(|arr| arr.get(0)).and_then(|v| v.as_str()) {
+                                        user = Some(first_val.to_string());
                                     }
                                 }
+                                "password" => {
+                                    if let Some(first_val) = field.value.as_array().and_then(|arr| arr.get(0)).and_then(|v| v.as_str()) {
+                                        password = Some(first_val.to_string());
+                                    }
+                                }
+                                _ => {}
                             }
                         }
 
@@ -108,7 +101,6 @@ pub fn extract_credentials_chrome(text: &str, verbose: bool) {
                 matched_str = matched_str.trim_end().to_string();
             }
 
-            // Fix json
             matched_str = format!("{{{}}}", &matched_str);
 
             if !strings_list.contains(&matched_str) && matched_str.len() > 20 {
@@ -119,27 +111,20 @@ pub fn extract_credentials_chrome(text: &str, verbose: bool) {
                         println!("[+] Found Credential:");
                         let mut user = None;
                         let mut password = None;
-                        for field in &credential.fields {
-                            // Get user
-                            if field.field_type == "login" {
-                                if let Some(val_array) = field.value.as_array() {
-                                    if !val_array.is_empty() {
-                                        if let Some(first_val) = val_array[0].as_str() {
-                                            user = Some(first_val.to_string());
-                                        }
-                                    }
-                                }
-                            }
 
-                            // Get password
-                            if field.field_type == "password" {
-                                if let Some(val_array) = field.value.as_array() {
-                                    if !val_array.is_empty() {
-                                        if let Some(first_val) = val_array[0].as_str() {
-                                            password = Some(first_val.to_string());
-                                        }
+                        for field in &credential.fields {
+                            match field.field_type.as_str() {
+                                "login" => {
+                                    if let Some(first_val) = field.value.as_array().and_then(|arr| arr.get(0)).and_then(|v| v.as_str()) {
+                                        user = Some(first_val.to_string());
                                     }
                                 }
+                                "password" => {
+                                    if let Some(first_val) = field.value.as_array().and_then(|arr| arr.get(0)).and_then(|v| v.as_str()) {
+                                        password = Some(first_val.to_string());
+                                    }
+                                }
+                                _ => {}
                             }
                         }
 
@@ -192,4 +177,3 @@ pub fn extract_cookies(text: &str, _verbose: bool) {
         }
     }
 }
-
